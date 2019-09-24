@@ -1,0 +1,6 @@
+<config>
+    <StfpSvr>192.168.110.3</StfpSvr>
+    <SftpUser>john</SftpUser>
+    <SftpPassword>john123</SftpPassword>
+    <LocalDir>C:\aaa\logs</LocalDir>
+</config>
