@@ -1,14 +1,14 @@
-#!/usr/bin/env python3
-# encoding:utf-8
+# -*- coding: utf-8 -*-
+# @Author  : guowr
+# @Time    : 2017/6/15 21:08
 import os
-import shutil
 
 __author__ = 'Ryan'
 
 '''
  下载某网站视频，视频用的索尼的.ts格式，需要先获取表单得到总的ts个数，然后再按名称合并成完整的视频。
  合并视频用到了ffmpeg
- 下载视频使用的axel
+ 下载视频使用的axel (linux ,mac平台)
 '''
 
 
@@ -17,11 +17,8 @@ class DownloadAndConvertVideo(object):
         self.mainFunc()
 
     def mainFunc(self):
-        list2 = [
-            'http://upup.osjzo.com:81/mediasas/2577/index.m3u8',
-        ]
         middle_url_list = [
-            'http://upup.osjzo.com:81/mediasas/2577/index.m3u8',
+            'http://example/xxx/xxx/index.m3u8',
         ]
         for url in middle_url_list:
             os.chdir('/Users/ryan/Documents/Python Project/Download_Sex_Video/')
