@@ -1,14 +1,15 @@
 # coding: utf-8
-import sqlite3
+import importlib
+
 from DBUtils.PooledDB import PooledDB
 from logger import logger
-import importlib
 
 
 class OperateSqlite:
 
     def __init__(self, conf):
-        self.pool = PooledDB(creator=importlib.import_module("sqlite3"), maxcached=50, maxconnections=1000, maxusage=1000, **conf)
+        self.pool = PooledDB(creator=importlib.import_module("sqlite3"), maxcached=50, maxconnections=1000,
+                             maxusage=1000, **conf)
 
     def select(self, sql, dict_mark=False):
         result = []

@@ -97,4 +97,4 @@ def temp(path):
     print ('totallines: %s, blocklines: %s, explines: %s, codelines: %s',(totallines, blocklines, explines, codelines))
 
 
-temp('E:\Python Project\TestDemo\Sum_of_OnetoHundred.py')
+temp() # need .py file path

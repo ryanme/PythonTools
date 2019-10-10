@@ -1,4 +1,3 @@
-#! python2.7
 # coding=utf8
 from __future__ import unicode_literals
 
@@ -6,7 +5,7 @@ import os
 import re
 import socket
 import urllib
-import urllib2
+import requests
 import MySQLdb
 from bs4 import BeautifulSoup
 import requests
@@ -17,9 +16,9 @@ __author__ = 'Ryan'
 下载蕾丝猫图片，按写真集归档
 URL存于数据库
 '''
-requests
 
-#通用连接方法
+
+# 通用连接方法
 def create_conn():
     conn = MySQLdb.connect(
         host='localhost',
@@ -31,7 +30,8 @@ def create_conn():
     )
     return conn
 
-#通用response
+
+# 通用response
 def get_response(url):
     send_headers = {
         'Host': 'www.lesmao.com',
@@ -41,13 +41,13 @@ def get_response(url):
     }
     while True:
         try:
-            req = urllib2.Request(url, headers=send_headers)
-            response = urllib2.urlopen(req, timeout=30).read()
+            response = requests.get(url=url, headers=send_headers).text
             return response
         except socket.error:
             continue
 
-#插入page地址
+
+# 插入page地址
 def insert_page_urls():
     left_url = 'http://www.lesmao.com/portal.php?page='
     conn = create_conn()
@@ -61,7 +61,7 @@ def insert_page_urls():
     conn.close()
 
 
-#计算张数,得到单张专辑有几页
+# 计算张数,得到单张专辑有几页
 def excute_url_nums(firsturl):
     res = get_response(firsturl)
     soup = BeautifulSoup(res, 'html.parser', from_encoding='utf-8')
@@ -77,7 +77,8 @@ def excute_url_nums(firsturl):
     img_nums = temp_num_a + temp_num_b
     return img_nums
 
-#传入page那页url,得到所有链接和标题
+
+# 传入page那页url,得到所有链接和标题
 def get_pages_allurls(pageurl):
     firsturls = []
     res = get_response(pageurl)
@@ -87,7 +88,8 @@ def get_pages_allurls(pageurl):
         firsturls.append(x.a['href'])
     return firsturls
 
-#传入首页获得标题
+
+# 传入首页获得标题
 def get_title(url):
     res_data = get_response(url)
     soup = BeautifulSoup(res_data, 'html.parser', from_encoding='utf-8')
@@ -100,7 +102,8 @@ def get_title(url):
             title = None
     return title
 
-#得到总的pages页地址
+
+# 得到总的pages页地址
 def get_firsturl(id):
     conn = create_conn()
     cur = conn.cursor()
@@ -109,7 +112,8 @@ def get_firsturl(id):
     url = cur.fetchone()[0]
     return url
 
-#传入首页和页数得到某一专辑所有网址
+
+# 传入首页和页数得到某一专辑所有网址
 def get_all_urls(nums, frist_url):
     full_urls=[]
     patten = re.compile(r'http://www.lesmao.com/thread-\d+')
@@ -120,7 +124,8 @@ def get_all_urls(nums, frist_url):
         full_urls.append(full_url)
     return full_urls
 
-#向数据库插入标题,标题id与pages_url关联
+
+# 向数据库插入标题,标题id与pages_url关联
 def insert_title(id):
     pageurl = get_firsturl(id)
     allurls = get_pages_allurls(pageurl)
@@ -138,12 +143,13 @@ def insert_title(id):
             try:
                 cur.execute(sql, temp)
                 conn.commit()
-                print 'Query OK,The num is %s,' % num
+                print('Query OK,The num is %s,' % num)
                 num = num + 1
-            except Exception, e:
-                print e
+            except Exception as e:
+                print(e)
 
-#向数据库插入图片地址
+
+# 向数据库插入图片地址
 def insert_img_url(title, firsturl, nums):
     conn = create_conn()
     cur = conn.cursor()
@@ -158,13 +164,14 @@ def insert_img_url(title, firsturl, nums):
             try:
                 cur.execute(sql, (title, img_url, 0))
                 conn.commit()
-                print "%s插入成功" % img_url
-            except Exception, e:
-                print e
+                print("%s插入成功" % img_url)
+            except Exception as e:
+                print(e)
     cur.close()
     conn.close()
 
-#每次从库里获取一个url去获取图片链接调用insert_img_url保存到库里
+
+# 每次从库里获取一个url去获取图片链接调用insert_img_url保存到库里
 def select_title_url():
     conn = create_conn()
     while True:
@@ -181,11 +188,12 @@ def select_title_url():
             cur.execute(sql2, (frist_url,))
             conn.commit()
             cur.close()
-        except Exception, e:
-            print e
+        except Exception as e:
+            print(e)
     conn.close()
 
-#判断图片存不存在
+
+# 判断图片存不存在
 def check(path ,img_urls, title):
     conn = create_conn()
     cur = conn.cursor()
@@ -197,17 +205,20 @@ def check(path ,img_urls, title):
         img_path = path+'/'+img_name
         if not os.path.exists(img_path):
             try:
-                urllib.urlretrieve(img_url, img_path)
-                print '保存%s成功' % img_path
-            except Exception, e:
-                print e
+                img_body = requests.get(img_url).content
+                with open(img_path, 'wb') as img_file:
+                    img_file.write(img_body)
+                print('保存%s成功' % img_path)
+            except Exception as e:
+                print(e)
         else:
-            print '%s已存在' % img_path
+            print('%s已存在' % img_path)
         cur.execute(update_state1, (img_url, ))
     cur.close()
     conn.close()
 
-#从标题库每次取一个标题,然后去图片路径库匹配找出改标题下的所以图片路径下载到指定目录
+
+# 从标题库每次取一个标题,然后去图片路径库匹配找出改标题下的所以图片路径下载到指定目录
 def save_img_tolocal():
     xpath = '/Users/ryan/Documents/lsm'
     title_sql = "select title from titles_url where is_download=1 limit 1;"
@@ -223,14 +234,15 @@ def save_img_tolocal():
         img_urls = cur.fetchall()
         if not os.path.exists(path):
             os.mkdir(path)
-            print '创建目录%s成功' % path
+            print('创建目录%s成功' % path)
         else:
-            print '目录%s已存在' % path
+            print('目录%s已存在' % path)
         check(path, img_urls, title)
         cur.execute(update_state2, (title, ))
         conn.commit()
     cur.close()
     conn.close()
+
 
 if __name__ == "__main__":
     save_img_tolocal()

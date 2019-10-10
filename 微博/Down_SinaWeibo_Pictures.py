@@ -3,9 +3,6 @@
 
 __author__ = 'Ryan'
 
-import sys
-# syreload(sys)
-# sys.setdefaultencoding('utf-8')
 import requests, os, math
 from urllib3 import request
 import ssl
@@ -14,11 +11,12 @@ ssl._create_default_https_context = ssl._create_unverified_context
 '''
 下载一个人所有发过的微博的图片
 i['text']是发过的文字，若要用到，自行拓展
-cookies 天蝎自己的cookies
+cookies 填写自己的cookies
 可以把uid提前准备好
 '''
 
-class Get_All_Weibo(object):
+
+class Get_All_Weibo:
 
     def __init__(self ,uid):
         self.uid = uid
@@ -36,7 +34,7 @@ class Get_All_Weibo(object):
         headers = {
             'Content-Type':'application/json; charset=utf-8'}
         res = requests.get(url=url,cookies=self.cookies,headers=headers)
-        res = res.json()
+        res = res.json()['data']
         containerid = res['tabsInfo']['tabs'][1]['containerid']
         screen_name = res['userInfo']['screen_name']
         user_map = {'containerid':containerid, 'screen_name':screen_name }
@@ -46,7 +44,7 @@ class Get_All_Weibo(object):
     def total_weibo_nums(self, uid):
         contained = self.origin_first_request(uid)['containerid']
         url = 'https://m.weibo.cn/api/container/getIndex?type=uid&value='+str(uid)+'&containerid='+str(contained)+'&page=1'
-        weibo_request = self.weibo_request(url)
+        weibo_request = self.weibo_request(url)['data']
         total_weibo_nums = int(weibo_request['cardlistInfo']['total'])
         return total_weibo_nums
 
@@ -69,8 +67,8 @@ class Get_All_Weibo(object):
     # 创建文件夹
     def create_folder(self, screen_name):
         nowpath = os.getcwd()
-        path = nowpath + '/' + screen_name # 拼接目录
-        if not os.path.exists(path): # 目录存在就不建立，不存在就创建
+        path = nowpath + '\\' + screen_name  # 拼接目录
+        if not os.path.exists(path):  # 目录存在就不建立，不存在就创建
             os.mkdir(path)
         return path # 返回完整文件夹路径
 
@@ -79,7 +77,7 @@ class Get_All_Weibo(object):
         path = self.create_folder(self.screen_name)  # 创建目录，有则返回，没有则创建在返回完整目录
         left_url = 'https://m.weibo.cn/api/container/getIndex?type=uid&value='+str(uid)+'&containerid='+str(self.containerid)+'&page='
         url = left_url + str(page)
-        weibo_request = self.weibo_request(url)
+        weibo_request = self.weibo_request(url)['data']
         dict_cards = weibo_request['cards']
         print('开始下载第'+str(page)+'页.......')
         for i in dict_cards:
@@ -104,10 +102,12 @@ class Get_All_Weibo(object):
     def save_to_path(self, path, img_url):
         temp_list = img_url.split('/')
         img_name = temp_list[len(temp_list)-1]  # 得到原始文件名
-        full_img_path = path + '/' + str(img_name)
+        full_img_path = path + '\\' + str(img_name)
+        res = requests.get(img_url)
         if not os.path.exists(full_img_path):  # 已有则不保存
-            request.urlretrieve(img_url, full_img_path) #py3
-            #urllib.urlretrieve(img_url, full_img_path) #py2
+            with open(full_img_path, 'wb') as file:
+                file.write(res.content)
+            # request.urlretrieve(img_url, full_img_path) #py3
             print('The download of '+str(img_name) +' is completed ! ')
 
 

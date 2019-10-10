@@ -1,7 +1,6 @@
 # coding: utf8
 import pymysql
 
-
 """
 操作mysql数据
 """
@@ -27,7 +26,7 @@ class OperateMysql:
             key = 'prodEnv'
         else:
             raise 'No this environment as %s' % env
-        getconfig = GetConfig('database.ini')
+        getconfig = GetConfig('database.ini')  # 自己写一个读取ini格式的方法
         section = getconfig.getsection(key)
         return section
 
@@ -36,6 +35,7 @@ class OperateMysql:
         conn.close()
 
     """查找语句"""
+
     def select(self, sql):
         sql = str(sql)
         cur = self.conn.cursor()
@@ -49,6 +49,7 @@ class OperateMysql:
         return results
 
     """增删改都是调用excute写在一个里面"""
+
     def modifiy(self, sql):
         sql = str(sql)
         cur = self.conn.cursor()

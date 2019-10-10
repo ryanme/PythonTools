@@ -1,4 +1,10 @@
 # coding:utf8
+
+"""
+读取xml文件
+"""
+
+
 import os
 import xml.etree.cElementTree as cET
 
@@ -23,6 +29,7 @@ def get_value(filename, key):
         return value
     except:
         raise "Has no key: %s" % key
+
 
 if __name__ == "__main__":
     filename = input("文件名:")

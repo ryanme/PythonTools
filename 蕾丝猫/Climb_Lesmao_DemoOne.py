@@ -1,13 +1,14 @@
-#/usr/bin/env python2.7
-#coding:utf-8
-import re, urllib, urllib2, os
+# coding:utf-8
+import re
+import os
+import requests
 from bs4 import BeautifulSoup
 
-__author__ = 'Ryan'
 
 '''
 下载蕾丝猫图片，不入库
 '''
+
 
 # 从首页开始获取写真链接
 def getAllLinks():
@@ -15,7 +16,7 @@ def getAllLinks():
     alllinks = []
     for i in range(0, 1):
         realUrl = oriUrl+str(i)
-        response = urllib2.urlopen(realUrl)
+        response = requests.get(realUrl).text
         soup = BeautifulSoup(response, 'html.parser', from_encoding='utf-8')
         links = soup.find_all('a', href=re.compile(r'http://www.lesmao.com/thread-\d+-\d+-\d+.html'))
         # 去重
@@ -25,13 +26,15 @@ def getAllLinks():
         alllinks = list(set(alllinks))
     return alllinks
 
+
 # 通用方法一次请求返回标题和页数
 def vivistUrl(firstUrl):
-    response = urllib2.urlopen(firstUrl)
+    response = requests.get(firstUrl).text
     soup = BeautifulSoup(response, 'html.parser', from_encoding='utf-8')
     links = soup.find_all('a', href=re.compile(r'http://www.lesmao.com/\w+-\d+-\d+-\d+.html'))
     title = soup.find_all('a', href=firstUrl)
     return links, title
+
 
 # 获取总页数
 def getPageLength(firstUrl):
@@ -43,6 +46,7 @@ def getPageLength(firstUrl):
         else:
             continue
     return pages
+
 
 # 获取标题
 def saveToLocal(firstUrl):
@@ -75,7 +79,7 @@ def createDocument(firstUrl):
     path = os.path.join(os.path.join(filepath, documentName), secondName)
     isExists = os.path.exists(path)
     if not isExists:
-        print path + ' 创建成功'
+        print(path + ' 创建成功')
         os.makedirs(path)
     else:
         pass
@@ -91,7 +95,7 @@ def savePictures(firstUrl):
             after = str(y)+'-1.html'
             b = strinfo.sub(str(x['href']), after)
             url2 = b
-            response2 = urllib2.urlopen(url2)
+            response2 = requests.get(url2).text
             soup2 = BeautifulSoup(response2, 'html.parser', from_encoding='utf-8')
             imgs = soup2.find_all('img', src=re.compile(r'\d+/\d+_\d+_\w+_\d+_\d+.jpg'))
 
@@ -100,14 +104,18 @@ def savePictures(firstUrl):
                 imgPath = os.path.join(path, img_name.encode('utf-8'))
                 exist = os.path.exists(imgPath)
                 if exist:
-                    print imgPath + "已存在"
+                    print(imgPath + "已存在")
                 else:
                     # 按原文件名命名保存
                     try:
-                        urllib.urlretrieve(img['src'], imgPath)
-                        print imgPath + "保存成功"
-                    except Exception, e:
+                        img_body = requests.get(img['src']).text
+                        with open(imgPath, 'wb') as file:
+                            file.write(img_body)
+                        print(imgPath + "保存成功")
+                    except Exception as e:
+                        print(e)
                         continue
+
 
 if __name__ == "__main__":
     allUrls = getAllLinks()
